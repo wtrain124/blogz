@@ -1,9 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1 align="center">{{title}}</h1>
-  <h2>{{blog.title}}</h2>
-  <p>{{blog.body}}</p>
-  <p class="post-author">written by <a href="/blog?user={{user.id}}">user.id</a></p>
+  <h1 align="center">{{title}}</h1>
+  
+  {% for blog in user_blogs|sort(attribute='id', reverse = True) %}
+    <h2>{{blog.title}}</h2>
+    <p>{{blog.body}}</p>
 
+    <tr> <i>written by: <a href="/blog?user={{blog.owner_id}}">{{blog.owner.username}}</a></i></tr>
+    <br>
+    <tr><i>{{ blog.created }}</i></tr> 
+    {% endfor %}
 {% endblock %}

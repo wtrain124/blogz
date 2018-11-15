@@ -1,5 +1,6 @@
 from flask import Flask, request, redirect, render_template, session, flash
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 
 app= Flask(__name__)
@@ -16,26 +17,19 @@ class Blog(db.Model):
       title = db.Column(db.String(120))
       body = db.Column(db.Text)
       owner_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+      created= db.Column(db.DateTime)
 
       def __init__(self,title,body,owner):
             self.title = title
             self.body = body
-            self.owner= owner #<-- May need to revisit this guy
-
-class Newpost(db.Model):
-      id = db.Column(db.Integer, primary_key=True)
-      title = db.Column(db.String(120))
-      body = db.Column(db.Text)
-
-      def __init__(self,title,body):
-            self.title = title
-            self.body = body   
+            self.owner= owner 
+            self.created= datetime.utcnow()
 
 class User(db.Model):
       id= db.Column(db.Integer,primary_key= True)
-      username = db.Column(db.String(120))
+      username = db.Column(db.String(120), unique=True)
       password = db.Column(db.String(120))
-      blogs = db.relationship('Blog', backref= 'owner') #<--May need to revist this
+      blogs = db.relationship('Blog', backref= 'owner') 
 
       def __init__(self, username, password):
             self.username= username
@@ -114,7 +108,6 @@ def login():
             username= request.form['username']
             password= request.form['password']
             user= User.query.filter_by(username=username).first()
-            #session['username'] = username
    
             if user and user.password == password:
                   session['username'] = username
@@ -128,12 +121,6 @@ def login():
                   flash('User does not exist', 'error')
                   return redirect('/login')
 
-            #TODO: Add a link to "/login" which will take users to the page
-            #we'll buildin index.html that will display all the usernames.
-            #You can call that page "Home".
-
-            #url= "/blog?id=" + str(new_blog.id)
-
       return render_template('login.html')
 
 @app.route('/logout', methods = ['POST','GET'])
@@ -145,17 +132,22 @@ def logout():
 
 @app.route('/blog', methods = ['POST','GET'])
 def blog():
-      
+      if "user" in request.args:
+            user_id = request.args.get("user")
+            user = User.query.get(user_id)
+            user_blogs = Blog.query.filter_by(owner=user).all()
+            return render_template("singleUser.html", title = user.username + "'s blogs", 
+                  user_blogs=user_blogs) 
+
       blog_id= request.args.get("id")
-      #session['username'] = blog_id
 
       if (blog_id)== None:
             blogs= Blog.query.all()
-            return render_template("blog.html", title= "Blogz", blogs= blogs)
+            return render_template("blog.html", title= "List of Blog Entries", blogs= blogs)
 
       else:
             blog= Blog.query.get(blog_id)
-            return render_template("single.html", title="My Entry", blog=blog)
+            return render_template("single.html", title="Whoa look at that!", blog=blog)
 
 
 #TODO: Consider what needs to happen here with the new parameter added.

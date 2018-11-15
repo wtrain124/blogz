@@ -5,4 +5,7 @@
   <h2>{{blog.title}}</h2>
   <p>{{blog.body}}</p>
 
+  <tr> <i>written by: <a href="/blog?user={{blog.owner_id}}">{{blog.owner.username}}</a></i></tr>
+  <br>
+  <tr><i>{{ blog.created }}</i></tr> 
 {% endblock %}
